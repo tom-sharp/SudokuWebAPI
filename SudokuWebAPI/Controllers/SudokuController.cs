@@ -23,6 +23,7 @@ using SudokuWebAPI.Dtos;
 			puzzle = is the solved puzzle string
 
 	ver		description
+	0.02	Updated to use SudokuPuzzle 0.08 (NumPass)
 	0.01	initial
  
  */
@@ -48,8 +49,8 @@ namespace SudokuWebAPI.Controllers
 			if (!sudoku.IsValid()) return Ok(new PuzzleDto("Invalid", sudoku.GetPuzzle()));
 			sudoku.ResolveRules();
 			if (!sudoku.IsValid()) return Ok(new PuzzleDto("Invalid", sudoku.GetPuzzle()));
-			if (!sudoku.IsSolved()) sudoku.ResolveBacktrack();
-			if (sudoku.IsSolved()) return Ok(new PuzzleDto("solved", sudoku.GetPuzzle()));
+			if (!sudoku.IsSolved()) sudoku.ResolveNumPass();
+			if (sudoku.IsSolved()) return Ok(new PuzzleDto("Ok", sudoku.GetPuzzle()));
 			return Ok(new PuzzleDto("Invalid", sudoku.GetPuzzle()));
 		}
 
