@@ -14,15 +14,16 @@ using SudokuWebAPI.Dtos;
 
 	http(s)://server/api/sudoku
 		will generate a random sudoku puzzle and return it as a json object with:
-			status = indicate that all went well and should be "Ok"
+			status = return status should be "ok"
 			puzzle = is the puzzle string
 	
 	http(s)://server/api/sudoku/{puzzle}
-		will solve sudoku {puzzle} and return a json object with:
-			status = indicate that all went well and should be "Ok" if solved
-			puzzle = is the solved puzzle string
+		will verify an already solved puzzle or solve a sudoku puzzle challange and return a json object with:
+			status = will be "invalid" if puzzle is invalid or incorrecty solved. will be "solved" if {puzzle} is solved correctly or "ok" if {puzzle} challange was solved
+			puzzle = is the solved puzzle string or the invalid puzzle
 
 	ver		description
+	0.03	Updated return object status code {Invalid, Solved, Ok} to support validation of a solved puzzle
 	0.02	Updated to use SudokuPuzzle 0.08 (NumPass)
 	0.01	initial
  
@@ -36,23 +37,30 @@ namespace SudokuWebAPI.Controllers
 	[ApiController]
 	public class SudokuController : ControllerBase
 	{
+
 		// GET: api/<SudokuController>
 		[HttpGet]
 		public ActionResult<PuzzleDto> Get() {
-			return Ok(new PuzzleDto("Ok", new CreateSudoku().GetSudokuPuzzle().GetPuzzle()));
+			return Ok(new PuzzleDto(statusOk, new CreateSudoku().GetSudokuPuzzle().GetPuzzle()));
 		}
 
 		// GET api/<SudokuController>/5
 		[HttpGet("{puzzle}")]
 		public ActionResult<PuzzleDto> Get(string puzzle) {
+
 			SudokuPuzzle sudoku = new SudokuPuzzle(puzzle);
-			if (!sudoku.IsValid()) return Ok(new PuzzleDto("Invalid", sudoku.GetPuzzle()));
-			sudoku.ResolveRules();
-			if (!sudoku.IsValid()) return Ok(new PuzzleDto("Invalid", sudoku.GetPuzzle()));
-			if (!sudoku.IsSolved()) sudoku.ResolveNumPass();
-			if (sudoku.IsSolved()) return Ok(new PuzzleDto("Ok", sudoku.GetPuzzle()));
-			return Ok(new PuzzleDto("Invalid", sudoku.GetPuzzle()));
+			if (!sudoku.IsValid()) return Ok(new PuzzleDto(statusInvalid, sudoku.GetPuzzle()));
+			if (sudoku.IsSolved()) return Ok(new PuzzleDto(statusSolved, sudoku.GetPuzzle()));
+
+			sudoku.ResolveNumPass();
+			if (sudoku.IsSolved()) return Ok(new PuzzleDto(statusOk, sudoku.GetPuzzle()));
+			return Ok(new PuzzleDto(statusInvalid, sudoku.GetPuzzle()));
+
 		}
+
+		string statusOk = "Ok";
+		string statusSolved = "Solved";
+		string statusInvalid = "Invalid";
 
 	}
 }
